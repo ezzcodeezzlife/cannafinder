@@ -1,10 +1,13 @@
 var express = require('express');
 var logger = require('morgan');
 const axios = require('axios').default;
+var compression = require('compression')
 require('dotenv').config()
 
 const port = 5000
 var app = express();
+
+app.use(compression())
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -21,6 +24,7 @@ app.get('/shops-near-coordinates', function(req, res) {
 
   if(!lat || !lon || !radius) {
     res.status(400).send('Required Parameters missing!');
+    return
   }
 
   const options = {
@@ -31,20 +35,17 @@ app.get('/shops-near-coordinates', function(req, res) {
   axios.request(options).then(function (response) {
     //console.log(response.data);
     
-
-    for (const [key, value] of Object.entries(response.data.elements)) {
-      console.log(key, value);
-      if(JSON.stringify(key) == "lat"){
-        console.log(value)
-      }
-    }
-    
-
     res.json({ data: response.data.elements }) //maybe remove
   }).catch(function (error) {
     console.error(error);
   });
 });
+
+//last route
+app.get('*', function(req, res){
+  res.status(404).send("Route not found");
+});
+
 
 app.listen(process.env.PORT || 5000, () => {
     console.log(`App listening at http://localhost:${port}`)
